@@ -114,8 +114,10 @@
             <div class="w-full md:w-auto flex items-center gap-2">
             <div class="relative flex-1 md:w-72">
                 <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                <input type="text" id="searchInput" placeholder="Пошук у списку новинок..."
-                    class="w-full bg-slate-900/90 text-sm text-slate-200 placeholder-slate-500 rounded-xl pl-10 pr-4 py-2.5 border border-slate-700/60 focus:outline-none focus:border-neonCyan transition-colors">
+                <input type="text" id="searchInput" placeholder="Пошук фільму..." enterkeyhint="search" autocomplete="off"
+                    class="w-full bg-slate-900/90 text-base text-slate-200 placeholder-slate-500 rounded-xl pl-10 pr-20 py-2.5 border border-slate-700/60 focus:outline-none focus:border-neonCyan transition-colors">
+                <button id="googleSearchBtn" type="button" title="Шукати в Google"
+                    class="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1 bg-neonCyan text-black text-xs font-bold rounded-lg active:scale-95">Google</button>
             </div>
             <button id="addMovieBtn" type="button" title="Додати свій фільм"
                 class="shrink-0 px-3.5 py-2.5 bg-neonCyan hover:opacity-90 active:scale-95 text-black font-bold text-sm rounded-xl flex items-center gap-1.5 transition-all">
@@ -217,12 +219,7 @@
 
                 <div>
                     <span class="block text-slate-400 mb-1">Де дивитись</span>
-                    <div class="flex flex-wrap gap-2">
-                        <button type="button" data-site="UAKINO" aria-pressed="false" class="site-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-700 text-slate-400">UAKINO</button>
-                        <button type="button" data-site="UASerials" aria-pressed="false" class="site-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-700 text-slate-400">UASerials</button>
-                        <button type="button" data-site="KinoUkr" aria-pressed="false" class="site-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-700 text-slate-400">KinoUkr</button>
-                        <button type="button" data-site="HDRezka" aria-pressed="false" class="site-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-700 text-slate-400">HDRezka</button>
-                    </div>
+                    <div id="siteChips" class="flex flex-wrap gap-2"></div>
                 </div>
 
                 <div>
@@ -270,11 +267,22 @@
                     <label for="s_HDRezka" class="block text-slate-400 mb-1">HDRezka</label>
                     <input id="s_HDRezka" type="url" inputmode="url" autocapitalize="off" autocomplete="off" class="w-full bg-slate-900/90 text-base text-slate-200 placeholder-slate-500 rounded-xl px-3 py-2.5 border border-slate-700/60 focus:outline-none focus:border-neonCyan transition-colors">
                 </div>
+                <div class="border-t border-slate-800 pt-3 space-y-3">
+                    <h4 class="font-bold text-sm text-slate-200">Мої сайти</h4>
+                    <div id="userSitesList" class="space-y-2"></div>
+                    <div class="space-y-2">
+                        <input id="newSiteName" type="text" maxlength="30" placeholder="Назва (наприклад, Megogo)" class="w-full bg-slate-900/90 text-base text-slate-200 placeholder-slate-500 rounded-xl px-3 py-2.5 border border-slate-700/60 focus:outline-none focus:border-neonCyan transition-colors">
+                        <input id="newSiteUrl" type="url" inputmode="url" autocapitalize="off" autocomplete="off" placeholder="https://сайт.com" class="w-full bg-slate-900/90 text-base text-slate-200 placeholder-slate-500 rounded-xl px-3 py-2.5 border border-slate-700/60 focus:outline-none focus:border-neonCyan transition-colors">
+                        <button type="button" id="addUserSiteBtn" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 font-semibold text-sm rounded-xl border border-slate-700 flex items-center justify-center gap-1.5">
+                            <i data-lucide="plus" class="w-4 h-4"></i><span>Додати сайт</span>
+                        </button>
+                    </div>
+                </div>
                 <p id="settingsError" class="hidden text-red-400 font-medium"></p>
             </div>
             <div class="flex gap-2">
                 <button type="button" id="saveSettingsBtn" class="flex-1 py-2.5 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-bold text-sm rounded-xl hover:opacity-90 transition-opacity">Зберегти</button>
-                <button type="button" id="resetSettingsBtn" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm rounded-xl">Скинути</button>
+                <button type="button" id="resetSettingsBtn" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm rounded-xl">Скинути основні</button>
             </div>
         </div>
     </div>
@@ -388,6 +396,10 @@
                 </a>
 
             </div>
+        <div id="userSitesRow" class="hidden mt-5">
+                <p class="text-xs text-slate-400 mb-2">Мої сайти</p>
+                <div id="userSitesLinks" class="flex flex-wrap gap-2"></div>
+            </div>
         </section>
 
         <!-- SECTION 2 -->
@@ -426,6 +438,12 @@
                 <i data-lucide="film" class="w-12 h-12 text-slate-600 mx-auto mb-3"></i>
                 <h3 class="text-lg font-semibold text-slate-300">Нічого не знайдено</h3>
                 <p class="text-xs text-slate-500 mt-1">Спробуйте змінити пошуковий запит або фільтр.</p>
+                <div id="emptyGoogleWrap" class="hidden mt-4">
+                    <a id="emptyGoogleLink" href="#" target="_blank" rel="noopener noreferrer"
+                       class="inline-flex items-center gap-1.5 px-4 py-2 bg-neonCyan text-black font-bold text-sm rounded-xl">
+                        <i data-lucide="search" class="w-4 h-4"></i><span id="emptyGoogleText"></span>
+                    </a>
+                </div>
             </div>
         </section>
 
@@ -727,6 +745,10 @@
 
         let siteUrls = Object.assign({}, SITE_URLS);
         const SITES_KEY = 'kinohub_site_urls_v1';
+        const USER_SITES_KEY = 'kinohub_user_sites_v1';
+        let userSites = [];
+        let draftUserSites = [];
+        let editingExtra = [];
 
         const COLOR_POOL = [
             "from-cyan-400 via-teal-300 to-emerald-400",
@@ -787,6 +809,7 @@
             if (filtered.length === 0) {
                 emptyState.classList.remove('hidden');
                 container.classList.add('hidden');
+                updateEmptyGoogle();
                 if (window.lucide) lucide.createIcons();
                 return;
             }
@@ -798,9 +821,9 @@
                 row.className = "p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-800/40 transition-colors";
 
                 const sitesHtml = item.sites.map(site => {
-                    const badgeStyle = siteBadgeStyles[site.name] || "bg-slate-800 text-slate-300 border-slate-700";
+                    const badgeStyle = siteBadgeStyles[site.name] || "bg-sky-500/10 text-sky-300 border-sky-500/30 hover:bg-sky-500/20";
                     return `
-                        <a href="${esc(safeHref(siteUrls[site.name] || site.url))}" target="_blank" rel="noopener noreferrer"
+                        <a href="${esc(safeHref(resolveSiteUrl(site.name) || site.url))}" target="_blank" rel="noopener noreferrer"
                            class="px-2.5 py-1 text-xs font-bold rounded-lg border transition-all ${badgeStyle} flex items-center gap-1.5 shadow-sm">
                             <span>${esc(site.name)}</span>
                             <i data-lucide="external-link" class="w-3 h-3 opacity-80"></i>
@@ -931,9 +954,12 @@
                 document.getElementById('fEpisode').value = item.progress ? item.progress.e : '';
                 const own = item.sites.find(s => s.name === 'Своє');
                 fLink.value = own ? own.url : '';
-                item.sites.forEach(s => { if (SITE_URLS[s.name]) selectedSites.add(s.name); });
+                const known = allSites().map(x => x.name);
+                editingExtra = item.sites.filter(s => s.name !== 'Своє' && !known.includes(s.name));
+                item.sites.forEach(s => { if (known.includes(s.name)) selectedSites.add(s.name); });
             } else {
                 editingId = null;
+                editingExtra = [];
                 formTitleEl.textContent = 'Новий фільм';
                 fTitle.value = '';
                 selectedCat = 'Фільм';
@@ -944,6 +970,7 @@
                 document.getElementById('fEpisode').value = '';
                 fLink.value = '';
             }
+            renderSiteChips();
             paintChips();
             addModal.classList.remove('hidden');
             addModal.classList.add('flex');
@@ -975,9 +1002,10 @@
             const link = normalizeUrl(fLink.value);
             if (link === null) { showError('Некоректне посилання. Приклад: https://example.com'); fLink.focus(); return; }
 
-            const sites = Object.keys(SITE_URLS)
-                .filter(name => selectedSites.has(name))
-                .map(name => ({ name, url: siteUrls[name] }));
+            const sites = allSites()
+                .filter(site => selectedSites.has(site.name))
+                .map(site => ({ name: site.name, url: site.url }))
+                .concat(editingExtra);
             if (link) sites.push({ name: 'Своє', url: link });
 
             const description = fDesc.value.trim();
@@ -1063,6 +1091,10 @@
             const err = document.getElementById('settingsError');
             err.classList.add('hidden');
             Object.keys(SITE_URLS).forEach(n => { document.getElementById('s_' + n).value = siteUrls[n]; });
+            draftUserSites = userSites.map(u => ({ name: u.name, url: u.url }));
+            renderUserSites();
+            document.getElementById('newSiteName').value = '';
+            document.getElementById('newSiteUrl').value = '';
             showModal(document.getElementById('settingsModal'));
         }
 
@@ -1078,9 +1110,22 @@
                 }
                 next[n] = v;
             }
+            const nextUser = [];
+            for (const u of draftUserSites) {
+                const v = normalizeUrl(u.url);
+                if (!v) {
+                    err.textContent = 'Вкажіть коректну адресу для «' + u.name + '».';
+                    err.classList.remove('hidden');
+                    return;
+                }
+                nextUser.push({ name: u.name, url: v });
+            }
             Object.assign(siteUrls, next);
+            userSites = nextUser;
+            saveUserSites();
             try { localStorage.setItem(SITES_KEY, JSON.stringify(siteUrls)); } catch (e) {}
             applySiteUrlsToCards();
+            refreshUserSiteUI();
             renderList();
             hideModal(document.getElementById('settingsModal'));
         }
@@ -1107,8 +1152,8 @@
             const t = searchTitleOf(item.title);
             document.getElementById('searchTitle').textContent = item.title;
             const linkClass = 'flex items-center justify-between gap-3 px-4 py-3 bg-slate-900/80 hover:bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200';
-            const links = Object.keys(SITE_URLS).map(name => {
-                const host = hostOf(siteUrls[name]);
+            const links = allSites().map(({ name, url }) => {
+                const host = hostOf(url);
                 const q = host ? 'site:' + host + ' ' + t : t;
                 return `<a href="${esc(googleUrl(q))}" target="_blank" rel="noopener noreferrer" class="${linkClass}">
                             <span class="font-semibold">${esc(name)}</span>
@@ -1123,9 +1168,175 @@
             showModal(document.getElementById('searchModal'));
         }
 
+        // ===== Мої сайти =====
+        function allSites() {
+            const builtin = Object.keys(SITE_URLS).map(name => ({ name, url: siteUrls[name] }));
+            return builtin.concat(userSites.map(u => ({ name: u.name, url: u.url })));
+        }
+
+        function resolveSiteUrl(name) {
+            if (siteUrls[name]) return siteUrls[name];
+            const u = userSites.find(x => x.name === name);
+            return u ? u.url : '';
+        }
+
+        function loadUserSites() {
+            try {
+                const raw = localStorage.getItem(USER_SITES_KEY);
+                if (!raw) return;
+                const arr = JSON.parse(raw);
+                if (!Array.isArray(arr)) return;
+                userSites = arr
+                    .filter(u => u && typeof u.name === 'string' && typeof u.url === 'string')
+                    .map(u => ({ name: u.name.trim().slice(0, 30), url: normalizeUrl(u.url) }))
+                    .filter(u => u.name && u.url);
+            } catch (e) {}
+        }
+
+        function saveUserSites() {
+            try { localStorage.setItem(USER_SITES_KEY, JSON.stringify(userSites)); } catch (e) {}
+        }
+
+        function renderSiteChips() {
+            const box = document.getElementById('siteChips');
+            box.innerHTML = allSites().map(site =>
+                `<button type="button" data-site="${esc(site.name)}" aria-pressed="false" class="site-btn px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-700 text-slate-400">${esc(site.name)}</button>`
+            ).join('');
+            // прибираємо вибір сайтів, яких вже немає
+            const names = allSites().map(x => x.name);
+            Array.from(selectedSites).forEach(n => { if (!names.includes(n)) selectedSites.delete(n); });
+        }
+
+        function renderQuickLinks() {
+            const row = document.getElementById('userSitesRow');
+            const box = document.getElementById('userSitesLinks');
+            if (!userSites.length) { row.classList.add('hidden'); box.innerHTML = ''; return; }
+            box.innerHTML = userSites.map(u =>
+                `<a href="${esc(safeHref(u.url))}" target="_blank" rel="noopener noreferrer"
+                    class="px-3 py-1.5 text-xs font-bold rounded-lg border bg-sky-500/10 text-sky-300 border-sky-500/30 hover:bg-sky-500/20 flex items-center gap-1.5">
+                    <span>${esc(u.name)}</span><i data-lucide="external-link" class="w-3 h-3 opacity-80"></i>
+                 </a>`
+            ).join('');
+            row.classList.remove('hidden');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function paintFilters() {
+            document.querySelectorAll('.filter-btn').forEach(b => {
+                const on = b.getAttribute('data-filter') === currentFilter;
+                b.classList.toggle('bg-neonCyan', on);
+                b.classList.toggle('text-black', on);
+                b.classList.toggle('active-filter', on);
+                b.classList.toggle('bg-slate-800', !on);
+                b.classList.toggle('text-slate-300', !on);
+            });
+        }
+
+        function renderCustomFilters() {
+            const box = document.getElementById('filterButtonsContainer');
+            box.querySelectorAll('[data-user-filter]').forEach(b => b.remove());
+            userSites.forEach(u => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.setAttribute('data-filter', u.name);
+                b.setAttribute('data-user-filter', '1');
+                b.className = 'filter-btn px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all';
+                b.textContent = u.name;
+                box.appendChild(b);
+            });
+            const exists = Array.from(box.querySelectorAll('.filter-btn')).some(b => b.getAttribute('data-filter') === currentFilter);
+            if (!exists) currentFilter = 'all';
+            paintFilters();
+        }
+
+        function refreshUserSiteUI() {
+            renderSiteChips();
+            renderQuickLinks();
+            renderCustomFilters();
+        }
+
+        function renderUserSites() {
+            const box = document.getElementById('userSitesList');
+            if (!draftUserSites.length) {
+                box.innerHTML = '<p class="text-xs text-slate-500">Поки що немає доданих сайтів.</p>';
+                return;
+            }
+            box.innerHTML = draftUserSites.map((u, i) => `
+                <div class="p-2.5 bg-slate-900/60 border border-slate-800 rounded-xl space-y-2">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="font-semibold text-slate-200 text-sm break-words min-w-0">${esc(u.name)}</span>
+                        <button type="button" data-del="${i}" aria-label="Видалити сайт" class="p-1 text-slate-400 hover:text-red-400 shrink-0">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                    <input type="url" inputmode="url" autocapitalize="off" autocomplete="off" value="${esc(u.url)}" data-user-url="${i}"
+                           class="w-full bg-slate-900/90 text-base text-slate-200 rounded-xl px-3 py-2 border border-slate-700/60 focus:outline-none focus:border-neonCyan">
+                </div>`).join('');
+            if (window.lucide) lucide.createIcons();
+        }
+
+        function addUserSite() {
+            const err = document.getElementById('settingsError');
+            const nameEl = document.getElementById('newSiteName');
+            const urlEl = document.getElementById('newSiteUrl');
+            const name = nameEl.value.trim();
+            const fail = (msg) => { err.textContent = msg; err.classList.remove('hidden'); };
+            err.classList.add('hidden');
+            if (!name) { fail('Введіть назву сайту.'); nameEl.focus(); return; }
+            const url = normalizeUrl(urlEl.value);
+            if (!url) { fail('Вкажіть коректну адресу. Приклад: https://example.com'); urlEl.focus(); return; }
+            const taken = Object.keys(SITE_URLS).concat(['Своє'], draftUserSites.map(u => u.name))
+                .some(n => n.toLowerCase() === name.toLowerCase());
+            if (taken) { fail('Сайт із такою назвою вже є.'); nameEl.focus(); return; }
+            draftUserSites.push({ name, url });
+            nameEl.value = '';
+            urlEl.value = '';
+            renderUserSites();
+        }
+
+        // ===== Пошук у Google з поля пошуку =====
+        function googleMovieUrl(q) {
+            return googleUrl(q + ' фільм дивитись онлайн українською');
+        }
+
+        function searchGoogleFromField() {
+            const input = document.getElementById('searchInput');
+            const q = input.value.trim();
+            if (!q) { input.focus(); return; }
+            window.open(googleMovieUrl(q), '_blank', 'noopener');
+        }
+
+        function updateEmptyGoogle() {
+            const wrap = document.getElementById('emptyGoogleWrap');
+            const q = searchQuery.trim();
+            if (!q) { wrap.classList.add('hidden'); return; }
+            document.getElementById('emptyGoogleLink').href = googleMovieUrl(q);
+            document.getElementById('emptyGoogleText').textContent = 'Шукати «' + q + '» в Google';
+            wrap.classList.remove('hidden');
+        }
+
         function bindExtras() {
             const settingsModal = document.getElementById('settingsModal');
             const searchModal = document.getElementById('searchModal');
+
+            document.getElementById('googleSearchBtn').addEventListener('click', searchGoogleFromField);
+            document.getElementById('searchInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); searchGoogleFromField(); }
+            });
+
+            document.getElementById('addUserSiteBtn').addEventListener('click', addUserSite);
+            document.getElementById('userSitesList').addEventListener('click', (e) => {
+                const del = e.target.closest('button[data-del]');
+                if (!del) return;
+                draftUserSites.splice(Number(del.dataset.del), 1);
+                renderUserSites();
+            });
+            document.getElementById('userSitesList').addEventListener('input', (e) => {
+                const inp = e.target.closest('input[data-user-url]');
+                if (!inp) return;
+                const u = draftUserSites[Number(inp.dataset.userUrl)];
+                if (u) u.url = inp.value;
+            });
 
             document.getElementById('settingsBtn').addEventListener('click', openSettings);
             document.getElementById('closeSettings').addEventListener('click', () => hideModal(settingsModal));
@@ -1168,22 +1379,17 @@
             loadSiteUrls();
             applySiteUrlsToCards();
             bindExtras();
+            loadUserSites();
+            refreshUserSiteUI();
             if (window.lucide) lucide.createIcons();
             renderList();
 
-            const filterButtons = document.querySelectorAll('.filter-btn');
-            filterButtons.forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    filterButtons.forEach(b => {
-                        b.classList.remove('bg-neonCyan', 'text-black', 'active-filter');
-                        b.classList.add('bg-slate-800', 'text-slate-300');
-                    });
-                    const clickedBtn = e.currentTarget;
-                    clickedBtn.classList.remove('bg-slate-800', 'text-slate-300');
-                    clickedBtn.classList.add('bg-neonCyan', 'text-black', 'active-filter');
-                    currentFilter = clickedBtn.getAttribute('data-filter');
-                    renderList();
-                });
+            document.getElementById('filterButtonsContainer').addEventListener('click', (e) => {
+                const btn = e.target.closest('.filter-btn');
+                if (!btn) return;
+                currentFilter = btn.getAttribute('data-filter');
+                paintFilters();
+                renderList();
             });
 
             document.getElementById('searchInput').addEventListener('input', (e) => {
@@ -1204,12 +1410,12 @@
             document.querySelectorAll('.cat-btn').forEach(b => {
                 b.addEventListener('click', () => { selectedCat = b.dataset.cat; paintChips(); });
             });
-            document.querySelectorAll('.site-btn').forEach(b => {
-                b.addEventListener('click', () => {
-                    const name = b.dataset.site;
-                    if (selectedSites.has(name)) selectedSites.delete(name); else selectedSites.add(name);
-                    paintChips();
-                });
+            document.getElementById('siteChips').addEventListener('click', (e) => {
+                const b = e.target.closest('.site-btn');
+                if (!b) return;
+                const name = b.dataset.site;
+                if (selectedSites.has(name)) selectedSites.delete(name); else selectedSites.add(name);
+                paintChips();
             });
 
             // Змінити / Видалити

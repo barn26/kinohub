@@ -1,4 +1,4 @@
-const CACHE = 'kinohub-v4';
+const CACHE = 'kinohub-v7';
 const LOCAL = [
   './',
   './index.html',
