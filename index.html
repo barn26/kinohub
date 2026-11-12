@@ -98,12 +98,17 @@
                     </div>
                 </div>
 
-                <!-- Install Button (в додатку) -->
+                <div class="flex items-center gap-2 shrink-0">
                 <button id="installAppBtn" type="button" title="Встановити додаток"
                     class="px-2.5 py-1.5 bg-cyan-500/15 hover:bg-cyan-500/25 active:scale-95 text-cyan-300 border border-cyan-500/40 hover:border-cyan-400 font-semibold text-xs rounded-lg flex items-center gap-1.5 transition-all shrink-0 shadow-sm">
                     <i data-lucide="download" class="w-3.5 h-3.5 text-cyan-400"></i>
                     <span>Встановити</span>
                 </button>
+                <button id="settingsBtn" type="button" title="Налаштування сайтів" aria-label="Налаштування сайтів"
+                    class="p-1.5 bg-slate-800/80 hover:bg-slate-700 active:scale-95 text-slate-300 border border-slate-700 rounded-lg transition-all shrink-0">
+                    <i data-lucide="settings" class="w-4 h-4"></i>
+                </button>
+                </div>
             </div>
 
             <div class="w-full md:w-auto flex items-center gap-2">
@@ -197,6 +202,19 @@
                     <textarea id="fDesc" rows="3" maxlength="400" placeholder="Коротко про сюжет..." class="w-full bg-slate-900/90 text-base text-slate-200 placeholder-slate-500 rounded-xl px-3 py-2.5 border border-slate-700/60 focus:outline-none focus:border-neonCyan transition-colors resize-none"></textarea>
                 </div>
 
+                <div id="progressWrap" class="hidden">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label for="fSeason" class="block text-slate-400 mb-1">Сезон</label>
+                            <input id="fSeason" type="text" inputmode="numeric" maxlength="2" placeholder="1" class="w-full bg-slate-900/90 text-base text-slate-200 placeholder-slate-500 rounded-xl px-3 py-2.5 border border-slate-700/60 focus:outline-none focus:border-neonCyan transition-colors">
+                        </div>
+                        <div>
+                            <label for="fEpisode" class="block text-slate-400 mb-1">Зупинився на серії</label>
+                            <input id="fEpisode" type="text" inputmode="numeric" maxlength="3" placeholder="0" class="w-full bg-slate-900/90 text-base text-slate-200 placeholder-slate-500 rounded-xl px-3 py-2.5 border border-slate-700/60 focus:outline-none focus:border-neonCyan transition-colors">
+                        </div>
+                    </div>
+                </div>
+
                 <div>
                     <span class="block text-slate-400 mb-1">Де дивитись</span>
                     <div class="flex flex-wrap gap-2">
@@ -222,6 +240,61 @@
         </div>
     </div>
 
+    <!-- Settings Modal -->
+    <div id="settingsModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="w-full max-w-md max-h-[90vh] overflow-y-auto bg-cardBg border border-slate-700 rounded-2xl p-5 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="settings" class="w-5 h-5 text-cyan-400"></i>
+                    <h3 class="font-bold text-base text-slate-100">Адреси сайтів</h3>
+                </div>
+                <button type="button" id="closeSettings" aria-label="Закрити" class="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <p class="text-xs text-slate-400 leading-relaxed">Якщо сайт змінив адресу — впишіть нову. Вона застосується до карток зверху, посилань у списку та пошуку.</p>
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label for="s_UAKINO" class="block text-slate-400 mb-1">UAKINO</label>
+                    <input id="s_UAKINO" type="url" inputmode="url" autocapitalize="off" autocomplete="off" class="w-full bg-slate-900/90 text-base text-slate-200 placeholder-slate-500 rounded-xl px-3 py-2.5 border border-slate-700/60 focus:outline-none focus:border-neonCyan transition-colors">
+                </div>
+                <div>
+                    <label for="s_UASerials" class="block text-slate-400 mb-1">UASerials</label>
+                    <input id="s_UASerials" type="url" inputmode="url" autocapitalize="off" autocomplete="off" class="w-full bg-slate-900/90 text-base text-slate-200 placeholder-slate-500 rounded-xl px-3 py-2.5 border border-slate-700/60 focus:outline-none focus:border-neonCyan transition-colors">
+                </div>
+                <div>
+                    <label for="s_KinoUkr" class="block text-slate-400 mb-1">KinoUkr</label>
+                    <input id="s_KinoUkr" type="url" inputmode="url" autocapitalize="off" autocomplete="off" class="w-full bg-slate-900/90 text-base text-slate-200 placeholder-slate-500 rounded-xl px-3 py-2.5 border border-slate-700/60 focus:outline-none focus:border-neonCyan transition-colors">
+                </div>
+                <div>
+                    <label for="s_HDRezka" class="block text-slate-400 mb-1">HDRezka</label>
+                    <input id="s_HDRezka" type="url" inputmode="url" autocapitalize="off" autocomplete="off" class="w-full bg-slate-900/90 text-base text-slate-200 placeholder-slate-500 rounded-xl px-3 py-2.5 border border-slate-700/60 focus:outline-none focus:border-neonCyan transition-colors">
+                </div>
+                <p id="settingsError" class="hidden text-red-400 font-medium"></p>
+            </div>
+            <div class="flex gap-2">
+                <button type="button" id="saveSettingsBtn" class="flex-1 py-2.5 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-bold text-sm rounded-xl hover:opacity-90 transition-opacity">Зберегти</button>
+                <button type="button" id="resetSettingsBtn" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm rounded-xl">Скинути</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Google Search Modal -->
+    <div id="searchModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="w-full max-w-md max-h-[90vh] overflow-y-auto bg-cardBg border border-slate-700 rounded-2xl p-5 shadow-2xl space-y-4">
+            <div class="flex items-start justify-between gap-3 border-b border-slate-800 pb-3">
+                <div class="min-w-0">
+                    <p class="text-xs text-slate-400">Шукати через Google</p>
+                    <h3 id="searchTitle" class="font-bold text-base text-slate-100 break-words"></h3>
+                </div>
+                <button type="button" id="closeSearch" aria-label="Закрити" class="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white shrink-0">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div id="searchLinks" class="space-y-2"></div>
+        </div>
+    </div>
+
     <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
 
         <!-- SECTION 1 -->
@@ -238,7 +311,7 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
-                <a href="https://uakino-hd.com" target="_blank" rel="noopener noreferrer"
+                <a data-site-link="UAKINO" href="https://uakino-hd.com" target="_blank" rel="noopener noreferrer"
                    class="group relative bg-cardBg border border-cyan-500/30 hover:border-cyan-400 rounded-2xl p-5 transition-all duration-300 transform hover:-translate-y-1 neon-glow-cyan flex flex-col justify-between overflow-hidden">
                     <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-neonCyan/10 rounded-full blur-xl group-hover:bg-neonCyan/20 transition-all"></div>
                     <div>
@@ -257,7 +330,7 @@
                     </div>
                 </a>
 
-                <a href="https://uaserials.my" target="_blank" rel="noopener noreferrer"
+                <a data-site-link="UASerials" href="https://uaserials.my" target="_blank" rel="noopener noreferrer"
                    class="group relative bg-cardBg border border-purple-500/30 hover:border-purple-400 rounded-2xl p-5 transition-all duration-300 transform hover:-translate-y-1 neon-glow-purple flex flex-col justify-between overflow-hidden">
                     <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-neonPurple/10 rounded-full blur-xl group-hover:bg-neonPurple/20 transition-all"></div>
                     <div>
@@ -276,7 +349,7 @@
                     </div>
                 </a>
 
-                <a href="https://kinoukr.tv" target="_blank" rel="noopener noreferrer"
+                <a data-site-link="KinoUkr" href="https://kinoukr.tv" target="_blank" rel="noopener noreferrer"
                    class="group relative bg-cardBg border border-pink-500/30 hover:border-pink-400 rounded-2xl p-5 transition-all duration-300 transform hover:-translate-y-1 neon-glow-pink flex flex-col justify-between overflow-hidden">
                     <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-neonPink/10 rounded-full blur-xl group-hover:bg-neonPink/20 transition-all"></div>
                     <div>
@@ -295,7 +368,7 @@
                     </div>
                 </a>
 
-                <a href="https://hdrezka.ag" target="_blank" rel="noopener noreferrer"
+                <a data-site-link="HDRezka" href="https://hdrezka.ag" target="_blank" rel="noopener noreferrer"
                    class="group relative bg-cardBg border border-amber-500/30 hover:border-amber-400 rounded-2xl p-5 transition-all duration-300 transform hover:-translate-y-1 neon-glow-amber flex flex-col justify-between overflow-hidden">
                     <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-amber-500/10 rounded-full blur-xl group-hover:bg-amber-500/20 transition-all"></div>
                     <div>
@@ -652,6 +725,9 @@
             "HDRezka": "https://hdrezka.ag"
         };
 
+        let siteUrls = Object.assign({}, SITE_URLS);
+        const SITES_KEY = 'kinohub_site_urls_v1';
+
         const COLOR_POOL = [
             "from-cyan-400 via-teal-300 to-emerald-400",
             "from-purple-400 via-pink-400 to-rose-400",
@@ -724,7 +800,7 @@
                 const sitesHtml = item.sites.map(site => {
                     const badgeStyle = siteBadgeStyles[site.name] || "bg-slate-800 text-slate-300 border-slate-700";
                     return `
-                        <a href="${esc(safeHref(site.url))}" target="_blank" rel="noopener noreferrer"
+                        <a href="${esc(safeHref(siteUrls[site.name] || site.url))}" target="_blank" rel="noopener noreferrer"
                            class="px-2.5 py-1 text-xs font-bold rounded-lg border transition-all ${badgeStyle} flex items-center gap-1.5 shadow-sm">
                             <span>${esc(site.name)}</span>
                             <i data-lucide="external-link" class="w-3 h-3 opacity-80"></i>
@@ -736,16 +812,35 @@
                     ? `<span class="px-2 py-0.5 bg-purple-500/15 text-purple-300 text-[10px] font-bold rounded-md border border-purple-500/30">Моє</span>`
                     : '';
 
-                const actionsHtml = item.custom
-                    ? `<div class="flex items-center gap-3 pt-1">
-                           <button type="button" data-action="edit" data-id="${esc(item.id)}" class="text-xs text-slate-400 hover:text-cyan-300 flex items-center gap-1">
-                               <i data-lucide="pencil" class="w-3.5 h-3.5"></i><span>Змінити</span>
-                           </button>
-                           <button type="button" data-action="delete" data-id="${esc(item.id)}" class="text-xs text-slate-400 hover:text-red-400 flex items-center gap-1">
-                               <i data-lucide="trash-2" class="w-3.5 h-3.5"></i><span>Видалити</span>
-                           </button>
+                const isSeries = /серіал/i.test(item.category || '');
+                const pr = item.progress || { s: 1, e: 0 };
+                const progressHtml = isSeries
+                    ? `<div class="flex flex-wrap items-center gap-2 pt-1 text-xs text-slate-400">
+                           <span>Сезон</span>
+                           <input type="number" inputmode="numeric" min="1" max="99" value="${esc(pr.s)}" data-prog="s" data-id="${esc(item.id)}"
+                                  class="w-14 text-center bg-slate-900 text-slate-200 text-base rounded-lg px-1 py-1 border border-slate-700 focus:outline-none focus:border-neonCyan">
+                           <span>Серія</span>
+                           <input type="number" inputmode="numeric" min="0" max="999" value="${esc(pr.e)}" data-prog="e" data-id="${esc(item.id)}"
+                                  class="w-16 text-center bg-slate-900 text-slate-200 text-base rounded-lg px-1 py-1 border border-slate-700 focus:outline-none focus:border-neonCyan">
+                           <button type="button" data-action="ep-plus" data-id="${esc(item.id)}"
+                                   class="px-2.5 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-semibold">+1 серія</button>
                        </div>`
                     : '';
+
+                const searchBtn = `<button type="button" data-action="search" data-id="${esc(item.id)}" class="text-xs text-cyan-300 hover:text-cyan-200 flex items-center gap-1">
+                                       <i data-lucide="search" class="w-3.5 h-3.5"></i><span>Знайти</span>
+                                   </button>`;
+
+                const editDelHtml = item.custom
+                    ? `<button type="button" data-action="edit" data-id="${esc(item.id)}" class="text-xs text-slate-400 hover:text-cyan-300 flex items-center gap-1">
+                           <i data-lucide="pencil" class="w-3.5 h-3.5"></i><span>Змінити</span>
+                       </button>
+                       <button type="button" data-action="delete" data-id="${esc(item.id)}" class="text-xs text-slate-400 hover:text-red-400 flex items-center gap-1">
+                           <i data-lucide="trash-2" class="w-3.5 h-3.5"></i><span>Видалити</span>
+                       </button>`
+                    : '';
+
+                const actionsHtml = `${progressHtml}<div class="flex items-center gap-3 pt-1">${searchBtn}${editDelHtml}</div>`;
 
                 const meta = esc(item.category) + (item.year ? ' · ' + esc(item.year) : '');
 
@@ -801,6 +896,7 @@
         const selectedSites = new Set();
 
         function paintChips() {
+            document.getElementById('progressWrap').classList.toggle('hidden', selectedCat !== 'Серіал');
             document.querySelectorAll('.cat-btn').forEach(b => {
                 b.classList.toggle('chip-on', b.dataset.cat === selectedCat);
             });
@@ -831,6 +927,8 @@
                 fRating.value = item.rating && item.rating !== '—' ? item.rating : '';
                 fYear.value = item.year || '';
                 fDesc.value = item.description || '';
+                document.getElementById('fSeason').value = item.progress ? item.progress.s : '';
+                document.getElementById('fEpisode').value = item.progress ? item.progress.e : '';
                 const own = item.sites.find(s => s.name === 'Своє');
                 fLink.value = own ? own.url : '';
                 item.sites.forEach(s => { if (SITE_URLS[s.name]) selectedSites.add(s.name); });
@@ -842,6 +940,8 @@
                 fRating.value = '';
                 fYear.value = '';
                 fDesc.value = '';
+                document.getElementById('fSeason').value = '';
+                document.getElementById('fEpisode').value = '';
                 fLink.value = '';
             }
             paintChips();
@@ -877,10 +977,21 @@
 
             const sites = Object.keys(SITE_URLS)
                 .filter(name => selectedSites.has(name))
-                .map(name => ({ name, url: SITE_URLS[name] }));
+                .map(name => ({ name, url: siteUrls[name] }));
             if (link) sites.push({ name: 'Своє', url: link });
 
             const description = fDesc.value.trim();
+
+            let progress;
+            if (selectedCat === 'Серіал') {
+                const sRaw = document.getElementById('fSeason').value.trim();
+                const eRaw = document.getElementById('fEpisode').value.trim();
+                if ((sRaw && !/^\d{1,2}$/.test(sRaw)) || (eRaw && !/^\d{1,3}$/.test(eRaw))) {
+                    showError('Сезон і серія — цілі числа.');
+                    return;
+                }
+                progress = { s: Math.max(1, parseInt(sRaw || '1', 10)), e: parseInt(eRaw || '0', 10) };
+            }
 
             if (editingId !== null) {
                 const item = contentData.find(i => i.id === editingId);
@@ -891,6 +1002,7 @@
                     item.year = year;
                     item.description = description;
                     item.sites = sites;
+                    item.progress = progress;
                 }
             } else {
                 const id = Date.now();
@@ -903,7 +1015,8 @@
                     colorClass: COLOR_POOL[id % COLOR_POOL.length],
                     description,
                     sites,
-                    custom: true
+                    custom: true,
+                    progress
                 });
             }
 
@@ -912,9 +1025,149 @@
             renderList();
         }
 
+        // ===== Адреси сайтів =====
+        function hostOf(url) {
+            try { return new URL(url).hostname.replace(/^www\./, ''); } catch (e) { return ''; }
+        }
+
+        function loadSiteUrls() {
+            try {
+                const raw = localStorage.getItem(SITES_KEY);
+                if (!raw) return;
+                const o = JSON.parse(raw);
+                Object.keys(SITE_URLS).forEach(k => {
+                    const v = typeof o[k] === 'string' ? normalizeUrl(o[k]) : '';
+                    if (v) siteUrls[k] = v;
+                });
+            } catch (e) {}
+        }
+
+        function applySiteUrlsToCards() {
+            document.querySelectorAll('[data-site-link]').forEach(a => {
+                const name = a.dataset.siteLink;
+                const url = siteUrls[name];
+                if (!url) return;
+                a.href = url;
+                if (name !== 'HDRezka') {
+                    const h = a.querySelector('h3');
+                    const host = hostOf(url);
+                    if (h && host) h.textContent = host;
+                }
+            });
+        }
+
+        function showModal(el) { el.classList.remove('hidden'); el.classList.add('flex'); }
+        function hideModal(el) { el.classList.add('hidden'); el.classList.remove('flex'); }
+
+        function openSettings() {
+            const err = document.getElementById('settingsError');
+            err.classList.add('hidden');
+            Object.keys(SITE_URLS).forEach(n => { document.getElementById('s_' + n).value = siteUrls[n]; });
+            showModal(document.getElementById('settingsModal'));
+        }
+
+        function saveSettings() {
+            const err = document.getElementById('settingsError');
+            const next = {};
+            for (const n of Object.keys(SITE_URLS)) {
+                const v = normalizeUrl(document.getElementById('s_' + n).value);
+                if (!v) {
+                    err.textContent = 'Вкажіть коректну адресу для ' + n + '. Приклад: https://example.com';
+                    err.classList.remove('hidden');
+                    return;
+                }
+                next[n] = v;
+            }
+            Object.assign(siteUrls, next);
+            try { localStorage.setItem(SITES_KEY, JSON.stringify(siteUrls)); } catch (e) {}
+            applySiteUrlsToCards();
+            renderList();
+            hideModal(document.getElementById('settingsModal'));
+        }
+
+        function resetSettings() {
+            Object.assign(siteUrls, SITE_URLS);
+            try { localStorage.removeItem(SITES_KEY); } catch (e) {}
+            Object.keys(SITE_URLS).forEach(n => { document.getElementById('s_' + n).value = siteUrls[n]; });
+            document.getElementById('settingsError').classList.add('hidden');
+            applySiteUrlsToCards();
+            renderList();
+        }
+
+        // ===== Пошук через Google =====
+        function googleUrl(q) {
+            return 'https://www.google.com/search?q=' + encodeURIComponent(q);
+        }
+
+        function searchTitleOf(title) {
+            return String(title).replace(/\s*[—–-]\s*Сезон.*$/i, '').trim();
+        }
+
+        function openSearch(item) {
+            const t = searchTitleOf(item.title);
+            document.getElementById('searchTitle').textContent = item.title;
+            const linkClass = 'flex items-center justify-between gap-3 px-4 py-3 bg-slate-900/80 hover:bg-slate-800 border border-slate-700 rounded-xl text-sm text-slate-200';
+            const links = Object.keys(SITE_URLS).map(name => {
+                const host = hostOf(siteUrls[name]);
+                const q = host ? 'site:' + host + ' ' + t : t;
+                return `<a href="${esc(googleUrl(q))}" target="_blank" rel="noopener noreferrer" class="${linkClass}">
+                            <span class="font-semibold">${esc(name)}</span>
+                            <span class="text-xs text-slate-500">${esc(host)}</span>
+                        </a>`;
+            });
+            links.push(`<a href="${esc(googleUrl(t + ' дивитись онлайн українською'))}" target="_blank" rel="noopener noreferrer" class="${linkClass}">
+                            <span class="font-semibold">Усі сайти</span>
+                            <span class="text-xs text-slate-500">без обмеження</span>
+                        </a>`);
+            document.getElementById('searchLinks').innerHTML = links.join('');
+            showModal(document.getElementById('searchModal'));
+        }
+
+        function bindExtras() {
+            const settingsModal = document.getElementById('settingsModal');
+            const searchModal = document.getElementById('searchModal');
+
+            document.getElementById('settingsBtn').addEventListener('click', openSettings);
+            document.getElementById('closeSettings').addEventListener('click', () => hideModal(settingsModal));
+            document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
+            document.getElementById('resetSettingsBtn').addEventListener('click', resetSettings);
+            settingsModal.addEventListener('click', (e) => { if (e.target === settingsModal) hideModal(settingsModal); });
+
+            document.getElementById('closeSearch').addEventListener('click', () => hideModal(searchModal));
+            searchModal.addEventListener('click', (e) => {
+                if (e.target === searchModal) hideModal(searchModal);
+                if (e.target.closest('a')) setTimeout(() => hideModal(searchModal), 150);
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key !== 'Escape') return;
+                hideModal(settingsModal);
+                hideModal(searchModal);
+            });
+
+            // Ручна зміна сезону / серії
+            document.getElementById('moviesList').addEventListener('change', (e) => {
+                const input = e.target.closest('input[data-prog]');
+                if (!input) return;
+                const item = contentData.find(i => i.id === Number(input.dataset.id));
+                if (!item) return;
+                const cur = item.progress || { s: 1, e: 0 };
+                const isSeason = input.dataset.prog === 's';
+                let v = parseInt(input.value, 10);
+                if (isNaN(v)) v = isSeason ? 1 : 0;
+                v = Math.min(isSeason ? 99 : 999, Math.max(isSeason ? 1 : 0, v));
+                input.value = v;
+                item.progress = { s: isSeason ? v : cur.s, e: isSeason ? cur.e : v };
+                saveCatalog();
+            });
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             updateOnlineStatus();
             loadCatalog();
+            loadSiteUrls();
+            applySiteUrlsToCards();
+            bindExtras();
             if (window.lucide) lucide.createIcons();
             renderList();
 
@@ -966,7 +1219,14 @@
                 const id = Number(btn.dataset.id);
                 const item = contentData.find(i => i.id === id);
                 if (!item) return;
-                if (btn.dataset.action === 'edit') {
+                if (btn.dataset.action === 'search') {
+                    openSearch(item);
+                } else if (btn.dataset.action === 'ep-plus') {
+                    const cur = item.progress || { s: 1, e: 0 };
+                    item.progress = { s: cur.s, e: cur.e + 1 };
+                    saveCatalog();
+                    renderList();
+                } else if (btn.dataset.action === 'edit') {
                     openForm(item);
                 } else if (btn.dataset.action === 'delete') {
                     if (confirm('Видалити «' + item.title + '»?')) {
