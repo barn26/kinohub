@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#0b0f19">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="КіноHub">
+    <title>КіноHub — PWA Автономний Кіногід</title>
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0b0f19',
+                        cardBg: '#131b2e',
+                        cardBorder: '#1e293b',
+                        neonCyan: '#06b6d4',
+                        neonPurple: '#a855f7',
+                        neonPink: '#ec4899',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0b0f19; }
+        ::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #06b6d4; }
+
+        body { padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
+
+        .neon-glow-cyan { box-shadow: 0 0 15px rgba(6, 182, 212, 0.35); }
+        .neon-glow-cyan:hover { box-shadow: 0 0 25px rgba(6, 182, 212, 0.65); }
+        .neon-glow-purple { box-shadow: 0 0 15px rgba(168, 85, 247, 0.35); }
+        .neon-glow-purple:hover { box-shadow: 0 0 25px rgba(168, 85, 247, 0.65); }
+        .neon-glow-pink { box-shadow: 0 0 15px rgba(236, 72, 153, 0.35); }
+        .neon-glow-pink:hover { box-shadow: 0 0 25px rgba(236, 72, 153, 0.65); }
+        .neon-glow-amber { box-shadow: 0 0 15px rgba(245, 158, 11, 0.35); }
+        .neon-glow-amber:hover { box-shadow: 0 0 25px rgba(245, 158, 11, 0.65); }
+    </style>
+</head>
+<body class="bg-darkBg text-slate-100 font-sans min-h-screen flex flex-col selection:bg-neonCyan selection:text-black">
+
+    <!-- Offline Banner -->
+    <div id="offlineBanner" class="hidden bg-amber-500/20 border-b border-amber-500/40 text-amber-300 text-xs py-1.5 px-4 text-center font-medium">
+        <span class="inline-flex items-center gap-1.5">
+            <i data-lucide="wifi-off" class="w-3.5 h-3.5"></i>
+            Автономний режим (Офлайн) — Список новинок доступний з кешу
+        </span>
+    </div>
+
+    <!-- Update Banner -->
+    <div id="updateBanner" class="hidden bg-emerald-500/15 border-b border-emerald-500/40 text-emerald-300 text-xs py-1.5 px-4 text-center font-medium">
+        Доступна нова версія —
+        <button id="updateBtn" class="underline font-bold">оновити</button>
+    </div>
+
+    <!-- Header -->
+    <header class="sticky top-0 z-40 bg-darkBg/90 backdrop-blur-md border-b border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div class="flex items-center justify-between w-full md:w-auto gap-3">
+                <div class="flex items-center space-x-3">
+                    <div class="p-2.5 bg-gradient-to-tr from-neonCyan to-neonPurple rounded-xl text-black shadow-lg">
+                        <i data-lucide="clapperboard" class="w-7 h-7 stroke-[2.5]"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h1 class="text-2xl font-extrabold tracking-tight bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-500 bg-clip-text text-transparent">
+                                КіноHub
+                            </h1>
+                            <span class="hidden sm:inline-block px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-cyan-500/10 text-cyan-400 border border-cyan-500/30 rounded-md">
+                                PWA
+                            </span>
+                        </div>
+                        <p class="text-xs text-slate-400 font-medium">Новинки Netflix, HBO & Apple TV+ українською</p>
+                    </div>
+                </div>
+
+                <!-- Install Button (в додатку) -->
+                <button id="installAppBtn" type="button" title="Встановити додаток"
+                    class="px-2.5 py-1.5 bg-cyan-500/15 hover:bg-cyan-500/25 active:scale-95 text-cyan-300 border border-cyan-500/40 hover:border-cyan-400 font-semibold text-xs rounded-lg flex items-center gap-1.5 transition-all shrink-0 shadow-sm">
+                    <i data-lucide="download" class="w-3.5 h-3.5 text-cyan-400"></i>
+                    <span>Встановити</span>
+                </button>
+            </div>
+
+            <div class="w-full md:w-80 relative">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                <input type="text" id="searchInput" placeholder="Пошук у списку новинок..."
+                    class="w-full bg-slate-900/90 text-sm text-slate-200 placeholder-slate-500 rounded-xl pl-10 pr-4 py-2.5 border border-slate-700/60 focus:outline-none focus:border-neonCyan transition-colors">
+            </div>
+        </div>
+    </header>
+
+    <!-- Install Guide Modal (iPhone / браузери без системного вікна) -->
+    <div id="installGuideModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="w-full max-w-md bg-cardBg border border-slate-700 rounded-2xl p-5 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="smartphone" class="w-5 h-5 text-cyan-400"></i>
+                    <h3 class="font-bold text-base text-slate-100">Встановлення КіноHub</h3>
+                </div>
+                <button id="closeInstallModal" class="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div class="space-y-3 text-xs text-slate-300 leading-relaxed">
+                <p class="text-slate-400">Щоб додати програму на головний екран як окремий додаток:</p>
+                <div id="guideIOS" class="p-3 bg-slate-900/80 rounded-xl border border-slate-800 space-y-1.5">
+                    <p class="font-bold text-purple-400">iPhone / iPad (Safari):</p>
+                    <p>Натисніть <span class="text-white font-semibold">«Поділитися»</span> (квадрат зі стрілкою) → <span class="text-white font-semibold">«На початковий екран»</span> → <span class="text-white font-semibold">«Додати»</span>.</p>
+                </div>
+                <div id="guideAndroid" class="p-3 bg-slate-900/80 rounded-xl border border-slate-800 space-y-1.5">
+                    <p class="font-bold text-cyan-400">Android (Chrome):</p>
+                    <p>Натисніть <span class="text-white font-semibold">⋮ (Меню)</span> → <span class="text-white font-semibold">«Встановити додаток»</span> або <span class="text-white font-semibold">«Додати на головний екран»</span>.</p>
+                </div>
+                <div id="guideDesktop" class="p-3 bg-slate-900/80 rounded-xl border border-slate-800 space-y-1.5">
+                    <p class="font-bold text-amber-400">ПК (Chrome / Edge):</p>
+                    <p>Натисніть іконку встановлення в правому куті адресного рядка або <span class="text-white font-semibold">⋮ → Зберегти та поділитися → Встановити сторінку як додаток</span>.</p>
+                </div>
+            </div>
+            <button id="okInstallModal" class="w-full py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-bold text-xs rounded-xl hover:opacity-90 transition-opacity">
+                Зрозуміло
+            </button>
+        </div>
+    </div>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-10">
+
+        <!-- SECTION 1 -->
+        <section>
+            <div class="flex items-center justify-between mb-5">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold flex items-center gap-2">
+                        <i data-lucide="globe" class="text-neonCyan w-6 h-6"></i>
+                        Топ Безкоштовні Кіноресурси
+                    </h2>
+                    <p class="text-slate-400 text-sm mt-1">Переходьте напряму на сайти для перегляду онлайн</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                <a href="https://uakino-hd.com" target="_blank" rel="noopener noreferrer"
+                   class="group relative bg-cardBg border border-cyan-500/30 hover:border-cyan-400 rounded-2xl p-5 transition-all duration-300 transform hover:-translate-y-1 neon-glow-cyan flex flex-col justify-between overflow-hidden">
+                    <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-neonCyan/10 rounded-full blur-xl group-hover:bg-neonCyan/20 transition-all"></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2.5 py-1 bg-cyan-500/10 text-cyan-400 text-xs font-bold rounded-lg border border-cyan-500/20">UAKINO</span>
+                            <i data-lucide="external-link" class="w-4 h-4 text-slate-400 group-hover:text-cyan-400 transition-colors"></i>
+                        </div>
+                        <h3 class="text-lg font-bold group-hover:text-cyan-300 transition-colors">uakino-hd.com</h3>
+                        <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+                            Один із найпопулярніших кінотеатрів. Швидка поява дубляжів Netflix та топових новинок.
+                        </p>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs font-semibold text-cyan-400 group-hover:translate-x-1 transition-transform">
+                        <span>Відкрити сайт</span>
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5 ml-1"></i>
+                    </div>
+                </a>
+
+                <a href="https://uaserials.my" target="_blank" rel="noopener noreferrer"
+                   class="group relative bg-cardBg border border-purple-500/30 hover:border-purple-400 rounded-2xl p-5 transition-all duration-300 transform hover:-translate-y-1 neon-glow-purple flex flex-col justify-between overflow-hidden">
+                    <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-neonPurple/10 rounded-full blur-xl group-hover:bg-neonPurple/20 transition-all"></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2.5 py-1 bg-purple-500/10 text-purple-400 text-xs font-bold rounded-lg border border-purple-500/20">UASerials</span>
+                            <i data-lucide="external-link" class="w-4 h-4 text-slate-400 group-hover:text-purple-400 transition-colors"></i>
+                        </div>
+                        <h3 class="text-lg font-bold group-hover:text-purple-300 transition-colors">uaserials.my</h3>
+                        <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+                            Найкраще для серіалів. Багатий вибір українських озвучок (Цікава Ідея, НеЗупиняйПродакшн).
+                        </p>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs font-semibold text-purple-400 group-hover:translate-x-1 transition-transform">
+                        <span>Дивитися серіали</span>
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5 ml-1"></i>
+                    </div>
+                </a>
+
+                <a href="https://kinoukr.tv" target="_blank" rel="noopener noreferrer"
+                   class="group relative bg-cardBg border border-pink-500/30 hover:border-pink-400 rounded-2xl p-5 transition-all duration-300 transform hover:-translate-y-1 neon-glow-pink flex flex-col justify-between overflow-hidden">
+                    <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-neonPink/10 rounded-full blur-xl group-hover:bg-neonPink/20 transition-all"></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2.5 py-1 bg-pink-500/10 text-pink-400 text-xs font-bold rounded-lg border border-pink-500/20">KinoUkr</span>
+                            <i data-lucide="external-link" class="w-4 h-4 text-slate-400 group-hover:text-pink-400 transition-colors"></i>
+                        </div>
+                        <h3 class="text-lg font-bold group-hover:text-pink-300 transition-colors">kinoukr.tv</h3>
+                        <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+                            Велика база якісного світового кіно, свіжих блокбастерів та мультфільмів у Full HD.
+                        </p>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs font-semibold text-pink-400 group-hover:translate-x-1 transition-transform">
+                        <span>Каталог фільмів</span>
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5 ml-1"></i>
+                    </div>
+                </a>
+
+                <a href="https://hdrezka.ag" target="_blank" rel="noopener noreferrer"
+                   class="group relative bg-cardBg border border-amber-500/30 hover:border-amber-400 rounded-2xl p-5 transition-all duration-300 transform hover:-translate-y-1 neon-glow-amber flex flex-col justify-between overflow-hidden">
+                    <div class="absolute -right-6 -bottom-6 w-24 h-24 bg-amber-500/10 rounded-full blur-xl group-hover:bg-amber-500/20 transition-all"></div>
+                    <div>
+                        <div class="flex items-center justify-between mb-3">
+                            <span class="px-2.5 py-1 bg-amber-500/10 text-amber-400 text-xs font-bold rounded-lg border border-amber-500/20">HDRezka / Filmix</span>
+                            <i data-lucide="external-link" class="w-4 h-4 text-slate-400 group-hover:text-amber-400 transition-colors"></i>
+                        </div>
+                        <h3 class="text-lg font-bold group-hover:text-amber-300 transition-colors">Агрегатори</h3>
+                        <p class="text-xs text-slate-400 mt-2 leading-relaxed">
+                            Найбільші онлайн-бази відео з різноманітними студіями озвучки та торент-плеєрами.
+                        </p>
+                    </div>
+                    <div class="mt-4 flex items-center text-xs font-semibold text-amber-400 group-hover:translate-x-1 transition-transform">
+                        <span>Перейти на сайт</span>
+                        <i data-lucide="arrow-right" class="w-3.5 h-3.5 ml-1"></i>
+                    </div>
+                </a>
+
+            </div>
+        </section>
+
+        <!-- SECTION 2 -->
+        <section class="space-y-6">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+                <div>
+                    <h2 class="text-xl sm:text-2xl font-bold flex items-center gap-2">
+                        <i data-lucide="sparkles" class="text-neonCyan w-6 h-6"></i>
+                        Топ Хіти, Серіали та Мультфільми
+                    </h2>
+                    <p class="text-slate-400 text-sm mt-1">Обирайте назву та дивіться на рекомендованому сайті українською (збережено офлайн)</p>
+                </div>
+
+                <div class="flex flex-wrap items-center gap-2" id="filterButtonsContainer">
+                    <button data-filter="all" class="filter-btn active-filter px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-neonCyan text-black transition-all">
+                        Всі
+                    </button>
+                    <button data-filter="UAKINO" class="filter-btn px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all">
+                        UAKINO
+                    </button>
+                    <button data-filter="UASerials" class="filter-btn px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all">
+                        UASerials
+                    </button>
+                    <button data-filter="KinoUkr" class="filter-btn px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all">
+                        KinoUkr
+                    </button>
+                    <button data-filter="HDRezka" class="filter-btn px-3.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all">
+                        HDRezka / Filmix
+                    </button>
+                </div>
+            </div>
+
+            <div id="moviesList" class="bg-cardBg border border-cardBorder rounded-2xl overflow-hidden shadow-xl divide-y divide-slate-800/80"></div>
+
+            <div id="emptyState" class="hidden text-center py-16 bg-slate-900/50 rounded-2xl border border-slate-800">
+                <i data-lucide="film" class="w-12 h-12 text-slate-600 mx-auto mb-3"></i>
+                <h3 class="text-lg font-semibold text-slate-300">Нічого не знайдено</h3>
+                <p class="text-xs text-slate-500 mt-1">Спробуйте змінити пошуковий запит або фільтр.</p>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="border-t border-slate-800 bg-slate-950 py-6 mt-12">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-slate-500 space-y-2">
+            <p>КіноHub PWA © 2026 — Автономний інформаційний агрегатор українського кінопростору.</p>
+            <p id="swCacheInfo" class="text-cyan-500/70">Офлайн-кеш: ініціалізація...</p>
+        </div>
+    </footer>
+
+    <script>
+        // ===== 1. Service Worker (окремий файл sw.js) =====
+        const swInfo = document.getElementById('swCacheInfo');
+        let waitingWorker = null;
+
+        function showUpdate(worker) {
+            waitingWorker = worker;
+            document.getElementById('updateBanner').classList.remove('hidden');
+        }
+
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then((reg) => {
+                        swInfo.textContent = 'Офлайн-кеш активний: додаток готовий до роботи без інтернету';
+                        if (reg.waiting && navigator.serviceWorker.controller) showUpdate(reg.waiting);
+                        reg.addEventListener('updatefound', () => {
+                            const nw = reg.installing;
+                            if (!nw) return;
+                            nw.addEventListener('statechange', () => {
+                                if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdate(nw);
+                            });
+                        });
+                    })
+                    .catch(() => {
+                        swInfo.textContent = 'Офлайн-кеш недоступний — відкрийте через HTTPS (GitHub Pages)';
+                    });
+            });
+
+            let reloading = false;
+            navigator.serviceWorker.addEventListener('controllerchange', () => {
+                if (reloading) return;
+                reloading = true;
+                location.reload();
+            });
+        } else {
+            swInfo.textContent = 'Цей браузер не підтримує офлайн-режим (Service Worker)';
+        }
+
+        document.getElementById('updateBtn').addEventListener('click', () => {
+            if (waitingWorker) waitingWorker.postMessage('SKIP_WAITING');
+        });
+
+        // ===== 2. Кнопка встановлення =====
+        let deferredPrompt = null;
+        const installBtn = document.getElementById('installAppBtn');
+        const installGuideModal = document.getElementById('installGuideModal');
+
+        const ua = navigator.userAgent || '';
+        const isIOS = /iphone|ipad|ipod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isAndroid = /android/i.test(ua);
+        const isStandalone = () =>
+            window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+        function openGuide() {
+            // Показуємо лише актуальну інструкцію для пристрою
+            document.getElementById('guideIOS').classList.toggle('hidden', !isIOS);
+            document.getElementById('guideAndroid').classList.toggle('hidden', isIOS);
+            document.getElementById('guideDesktop').classList.toggle('hidden', isIOS || isAndroid);
+            installGuideModal.classList.remove('hidden');
+            installGuideModal.classList.add('flex');
+        }
+        function closeGuide() {
+            installGuideModal.classList.add('hidden');
+            installGuideModal.classList.remove('flex');
+        }
+
+        function markInstalled() {
+            installBtn.innerHTML = '<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i><span>Встановлено</span>';
+            installBtn.classList.remove('text-cyan-300', 'border-cyan-500/40', 'bg-cyan-500/15');
+            installBtn.classList.add('text-emerald-300', 'border-emerald-500/40', 'bg-emerald-500/15');
+            if (window.lucide) lucide.createIcons();
+            setTimeout(() => installBtn.classList.add('hidden'), 2500);
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+        });
+
+        window.addEventListener('appinstalled', () => {
+            deferredPrompt = null;
+            markInstalled();
+        });
+
+        // Якщо вже відкрито як встановлений додаток — ховаємо кнопку
+        if (isStandalone()) installBtn.classList.add('hidden');
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                deferredPrompt = null;
+                if (outcome === 'accepted') markInstalled();
+            } else {
+                openGuide();
+            }
+        });
+
+        document.getElementById('closeInstallModal').addEventListener('click', closeGuide);
+        document.getElementById('okInstallModal').addEventListener('click', closeGuide);
+        installGuideModal.addEventListener('click', (e) => { if (e.target === installGuideModal) closeGuide(); });
+
+        // ===== 3. Online / Offline =====
+        function updateOnlineStatus() {
+            document.getElementById('offlineBanner').classList.toggle('hidden', navigator.onLine);
+        }
+        window.addEventListener('online', updateOnlineStatus);
+        window.addEventListener('offline', updateOnlineStatus);
+
+        // ===== 4. Дані та рендер =====
+        const DEFAULT_CONTENT_DATA = [
+            {
+                id: 1,
+                title: "Венздей (Wednesday) — Сезон 2",
+                category: "Серіал",
+                rating: "8.1",
+                year: "2025",
+                colorClass: "from-cyan-400 via-teal-300 to-emerald-400",
+                description: "Темна академія Невермор, нові таємниці та загадкові містичні розслідування.",
+                sites: [
+                    { name: "UASerials", url: "https://uaserials.my" },
+                    { name: "UAKINO", url: "https://uakino-hd.com" },
+                    { name: "HDRezka", url: "https://hdrezka.ag" }
+                ]
+            },
+            {
+                id: 2,
+                title: "Аркейн (Arcane) — Сезон 2",
+                category: "Серіал / Мультсеріал",
+                rating: "9.0",
+                year: "2024",
+                colorClass: "from-purple-400 via-pink-400 to-rose-400",
+                description: "Фінальний епічний конфлікт між містами Пілтовер та Заун у всесвіті League of Legends.",
+                sites: [
+                    { name: "UASerials", url: "https://uaserials.my" },
+                    { name: "UAKINO", url: "https://uakino-hd.com" },
+                    { name: "HDRezka", url: "https://hdrezka.ag" }
+                ]
+            },
+            {
+                id: 3,
+                title: "Дюна: Частина Друга (Dune: Part Two)",
+                category: "Фільм",
+                rating: "8.6",
+                year: "2024",
+                colorClass: "from-amber-400 via-orange-400 to-yellow-300",
+                description: "Пол Атрід об'єднується з фрименами пустелі Арракіс для грандіозної помсти ворогам.",
+                sites: [
+                    { name: "UAKINO", url: "https://uakino-hd.com" },
+                    { name: "KinoUkr", url: "https://kinoukr.tv" },
+                    { name: "HDRezka", url: "https://hdrezka.ag" }
+                ]
+            },
+            {
+                id: 4,
+                title: "Гра в Кальмара (Squid Game) — Сезон 2",
+                category: "Серіал",
+                rating: "8.0",
+                year: "2024",
+                colorClass: "from-pink-500 via-purple-500 to-cyan-400",
+                description: "Нові смертельні випробування та спроба Гі Хуна назавжди зруйнувати систему гри.",
+                sites: [
+                    { name: "UASerials", url: "https://uaserials.my" },
+                    { name: "UAKINO", url: "https://uakino-hd.com" },
+                    { name: "HDRezka", url: "https://hdrezka.ag" }
+                ]
+            },
+            {
+                id: 5,
+                title: "Дім Дракона (House of the Dragon) — Сезон 2",
+                category: "Серіал",
+                rating: "8.4",
+                year: "2024",
+                colorClass: "from-red-400 via-orange-500 to-amber-300",
+                description: "Кривава громадянська війна «Танок Драконів» за владу над Вестеросом.",
+                sites: [
+                    { name: "UASerials", url: "https://uaserials.my" },
+                    { name: "KinoUkr", url: "https://kinoukr.tv" },
+                    { name: "HDRezka", url: "https://hdrezka.ag" }
+                ]
+            },
+            {
+                id: 6,
+                title: "Думками навиворіт 2 (Inside Out 2)",
+                category: "Мультфільм",
+                rating: "7.7",
+                year: "2024",
+                colorClass: "from-cyan-300 via-blue-400 to-purple-400",
+                description: "Райлі стає підлітком, а в її свідомості з'являються нові емоції на чолі з Тривогою.",
+                sites: [
+                    { name: "UAKINO", url: "https://uakino-hd.com" },
+                    { name: "KinoUkr", url: "https://kinoukr.tv" },
+                    { name: "HDRezka", url: "https://hdrezka.ag" }
+                ]
+            },
+            {
+                id: 7,
+                title: "Пінгвін (The Penguin)",
+                category: "Серіал",
+                rating: "8.8",
+                year: "2024",
+                colorClass: "from-slate-300 via-cyan-400 to-blue-500",
+                description: "Кримінальна драма про те, як Освальд Кобблпот захоплює владу в темному Ґотемі.",
+                sites: [
+                    { name: "UASerials", url: "https://uaserials.my" },
+                    { name: "UAKINO", url: "https://uakino-hd.com" },
+                    { name: "HDRezka", url: "https://hdrezka.ag" }
+                ]
+            },
+            {
+                id: 8,
+                title: "Дедпул і Росомаха (Deadpool & Wolverine)",
+                category: "Фільм",
+                rating: "7.8",
+                year: "2024",
+                colorClass: "from-yellow-400 via-red-500 to-pink-500",
+                description: "Божевільна та вибухова мультивсесвітня пригода від Marvel Studios.",
+                sites: [
+                    { name: "UAKINO", url: "https://uakino-hd.com" },
+                    { name: "KinoUkr", url: "https://kinoukr.tv" },
+                    { name: "HDRezka", url: "https://hdrezka.ag" }
+                ]
+            },
+            {
+                id: 9,
+                title: "Кунг-Фу Панда 4 (Kung Fu Panda 4)",
+                category: "Мультфільм",
+                rating: "7.2",
+                year: "2024",
+                colorClass: "from-emerald-400 via-teal-400 to-cyan-300",
+                description: "Воїн Дракона По шукає собі заміну на посаду духовного лідера Долини Миру.",
+                sites: [
+                    { name: "UAKINO", url: "https://uakino-hd.com" },
+                    { name: "KinoUkr", url: "https://kinoukr.tv" }
+                ]
+            },
+            {
+                id: 10,
+                title: "Поділ (Severance) — Сезон 2",
+                category: "Серіал",
+                rating: "8.7",
+                year: "2025",
+                colorClass: "from-teal-300 via-cyan-400 to-indigo-400",
+                description: "Таємничий психологічний трилер про поділ робочої пам'яті працівників корпорації.",
+                sites: [
+                    { name: "UASerials", url: "https://uaserials.my" },
+                    { name: "HDRezka", url: "https://hdrezka.ag" }
+                ]
+            }
+        ];
+
+        const STORAGE_KEY = 'kinohub_offline_catalog_v1';
+        let contentData = [];
+
+        function loadCatalog() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                if (saved) {
+                    contentData = JSON.parse(saved);
+                } else {
+                    contentData = DEFAULT_CONTENT_DATA;
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(contentData));
+                }
+            } catch (e) {
+                contentData = DEFAULT_CONTENT_DATA;
+            }
+        }
+
+        let currentFilter = 'all';
+        let searchQuery = '';
+
+        const siteBadgeStyles = {
+            "UAKINO": "bg-cyan-500/10 text-cyan-400 border-cyan-500/30 hover:bg-cyan-500/20",
+            "UASerials": "bg-purple-500/10 text-purple-400 border-purple-500/30 hover:bg-purple-500/20",
+            "KinoUkr": "bg-pink-500/10 text-pink-400 border-pink-500/30 hover:bg-pink-500/20",
+            "HDRezka": "bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20"
+        };
+
+        function renderList() {
+            const container = document.getElementById('moviesList');
+            const emptyState = document.getElementById('emptyState');
+            container.innerHTML = '';
+
+            const q = searchQuery.toLowerCase();
+            const filtered = contentData.filter(item => {
+                const siteList = item.sites.map(s => s.name);
+                const matchesFilter = (currentFilter === 'all') || siteList.includes(currentFilter);
+                const matchesSearch = item.title.toLowerCase().includes(q) ||
+                                      item.description.toLowerCase().includes(q) ||
+                                      item.category.toLowerCase().includes(q);
+                return matchesFilter && matchesSearch;
+            });
+
+            if (filtered.length === 0) {
+                emptyState.classList.remove('hidden');
+                container.classList.add('hidden');
+                if (window.lucide) lucide.createIcons();
+                return;
+            }
+            emptyState.classList.add('hidden');
+            container.classList.remove('hidden');
+
+            filtered.forEach((item, index) => {
+                const row = document.createElement('div');
+                row.className = "p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-slate-800/40 transition-colors";
+
+                const sitesHtml = item.sites.map(site => {
+                    const badgeStyle = siteBadgeStyles[site.name] || "bg-slate-800 text-slate-300 border-slate-700";
+                    return `
+                        <a href="${site.url}" target="_blank" rel="noopener noreferrer"
+                           class="px-2.5 py-1 text-xs font-bold rounded-lg border transition-all ${badgeStyle} flex items-center gap-1.5 shadow-sm">
+                            <span>${site.name}</span>
+                            <i data-lucide="external-link" class="w-3 h-3 opacity-80"></i>
+                        </a>
+                    `;
+                }).join('');
+
+                row.innerHTML = `
+                    <div class="flex items-start gap-4">
+                        <div class="hidden sm:flex items-center justify-center w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 font-bold text-xs shrink-0">
+                            #${index + 1}
+                        </div>
+                        <div class="space-y-1">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <h3 class="text-base sm:text-lg font-bold bg-gradient-to-r ${item.colorClass} bg-clip-text text-transparent tracking-wide">
+                                    ${item.title}
+                                </h3>
+                                <span class="px-2 py-0.5 bg-slate-900/80 text-slate-400 text-[11px] font-semibold rounded-md border border-slate-800">
+                                    ${item.category}
+                                </span>
+                            </div>
+                            <p class="text-xs text-slate-400 leading-relaxed font-normal max-w-2xl">
+                                ${item.description}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between md:justify-end gap-3 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800/80">
+                        <div class="flex items-center gap-1.5 text-xs text-amber-400 font-bold bg-amber-500/10 px-2.5 py-1 rounded-lg border border-amber-500/20 shrink-0">
+                            <i data-lucide="star" class="w-3.5 h-3.5 fill-amber-400"></i>
+                            <span>${item.rating}</span>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-1.5 justify-end">
+                            ${sitesHtml}
+                        </div>
+                    </div>
+                `;
+
+                container.appendChild(row);
+            });
+
+            if (window.lucide) lucide.createIcons();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            updateOnlineStatus();
+            loadCatalog();
+            if (window.lucide) lucide.createIcons();
+            renderList();
+
+            const filterButtons = document.querySelectorAll('.filter-btn');
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    filterButtons.forEach(b => {
+                        b.classList.remove('bg-neonCyan', 'text-black', 'active-filter');
+                        b.classList.add('bg-slate-800', 'text-slate-300');
+                    });
+                    const clickedBtn = e.currentTarget;
+                    clickedBtn.classList.remove('bg-slate-800', 'text-slate-300');
+                    clickedBtn.classList.add('bg-neonCyan', 'text-black', 'active-filter');
+                    currentFilter = clickedBtn.getAttribute('data-filter');
+                    renderList();
+                });
+            });
+
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                searchQuery = e.target.value;
+                renderList();
+            });
+        });
+    </script>
+</body>
+</html>
