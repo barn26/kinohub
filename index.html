@@ -200,6 +200,17 @@
                 </div>
 
                 <div>
+                    <label for="fPoster" class="block text-slate-400 mb-1">Посилання на постер</label>
+                    <input id="fPoster" type="url" inputmode="url" autocapitalize="off" autocomplete="off" placeholder="https://.../poster.jpg" class="w-full bg-slate-900/90 text-base text-slate-200 placeholder-slate-500 rounded-xl px-3 py-2.5 border border-slate-700/60 focus:outline-none focus:border-neonCyan transition-colors">
+                    <div class="flex items-center gap-3 mt-2">
+                        <img id="fPosterPreview" class="hidden w-16 h-24 rounded-lg border border-slate-700 object-cover" alt="Попередній перегляд" referrerpolicy="no-referrer">
+                        <button type="button" id="findPosterBtn" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 font-semibold text-xs rounded-xl border border-slate-700 flex items-center gap-1.5">
+                            <i data-lucide="search" class="w-3.5 h-3.5"></i><span>Знайти постер</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
                     <label for="fDesc" class="block text-slate-400 mb-1">Опис</label>
                     <textarea id="fDesc" rows="3" maxlength="400" placeholder="Коротко про сюжет..." class="w-full bg-slate-900/90 text-base text-slate-200 placeholder-slate-500 rounded-xl px-3 py-2.5 border border-slate-700/60 focus:outline-none focus:border-neonCyan transition-colors resize-none"></textarea>
                 </div>
@@ -301,6 +312,37 @@
                 </button>
             </div>
             <div id="searchLinks" class="space-y-2"></div>
+        </div>
+    </div>
+
+    <!-- Poster Modal -->
+    <div id="posterModal" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="w-full max-w-md max-h-[90vh] overflow-y-auto bg-cardBg border border-slate-700 rounded-2xl p-5 shadow-2xl space-y-4">
+            <div class="flex items-start justify-between gap-3 border-b border-slate-800 pb-3">
+                <div class="min-w-0">
+                    <p class="text-xs text-slate-400">Постер</p>
+                    <h3 id="posterTitle" class="font-bold text-base text-slate-100 break-words"></h3>
+                </div>
+                <button type="button" id="closePoster" aria-label="Закрити" class="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white shrink-0">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            <div class="flex justify-center">
+                <img id="posterBig" class="hidden max-h-[50vh] max-w-full rounded-xl border border-slate-700 object-contain" alt="Постер" referrerpolicy="no-referrer">
+                <div id="posterEmpty" class="w-full py-10 text-center text-xs text-slate-500 bg-slate-900/60 border border-slate-800 rounded-xl">Постера ще немає</div>
+            </div>
+            <div class="text-xs">
+                <label for="posterUrl" class="block text-slate-400 mb-1">Посилання на постер</label>
+                <input id="posterUrl" type="url" inputmode="url" autocapitalize="off" autocomplete="off" placeholder="https://.../poster.jpg" class="w-full bg-slate-900/90 text-base text-slate-200 placeholder-slate-500 rounded-xl px-3 py-2.5 border border-slate-700/60 focus:outline-none focus:border-neonCyan transition-colors">
+            </div>
+            <button type="button" id="posterFindBtn" class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-cyan-300 font-semibold text-sm rounded-xl border border-slate-700 flex items-center justify-center gap-1.5">
+                <i data-lucide="search" class="w-4 h-4"></i><span>Знайти постер у Google</span>
+            </button>
+            <p id="posterError" class="hidden text-xs text-red-400 font-medium"></p>
+            <div class="flex gap-2">
+                <button type="button" id="savePosterBtn" class="flex-1 py-2.5 bg-gradient-to-r from-cyan-500 to-purple-500 text-black font-bold text-sm rounded-xl hover:opacity-90 transition-opacity">Зберегти</button>
+                <button type="button" id="removePosterBtn" class="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm rounded-xl">Прибрати</button>
+            </div>
         </div>
     </div>
 
@@ -868,11 +910,20 @@
 
                 const meta = esc(item.category) + (item.year ? ' · ' + esc(item.year) : '');
 
+                const hasPoster = !!item.poster && /^https?:\/\//i.test(item.poster);
+                const posterHtml = `<button type="button" data-action="poster" data-id="${esc(item.id)}" aria-label="Постер: ${esc(item.title)}"
+                        class="shrink-0 w-16 h-24 rounded-lg overflow-hidden bg-slate-900 border border-slate-800 hover:border-cyan-500/50 flex items-center justify-center">
+                        ${hasPoster
+                            ? `<img src="${esc(item.poster)}" alt="" data-poster="1" loading="lazy" referrerpolicy="no-referrer" class="w-full h-full object-cover">`
+                            : `<i data-lucide="image" class="w-6 h-6 text-slate-600"></i>`}
+                    </button>`;
+
                 row.innerHTML = `
                     <div class="flex items-start gap-4">
                         <div class="hidden sm:flex items-center justify-center w-8 h-8 rounded-xl bg-slate-900 border border-slate-800 text-slate-400 font-bold text-xs shrink-0">
                             #${index + 1}
                         </div>
+                        ${posterHtml}
                         <div class="space-y-1 min-w-0">
                             <div class="flex flex-wrap items-center gap-2">
                                 <h3 class="text-base sm:text-lg font-bold bg-gradient-to-r ${esc(item.colorClass)} bg-clip-text text-transparent tracking-wide break-words">
@@ -951,6 +1002,7 @@
                 fRating.value = item.rating && item.rating !== '—' ? item.rating : '';
                 fYear.value = item.year || '';
                 fDesc.value = item.description || '';
+                document.getElementById('fPoster').value = item.poster || '';
                 document.getElementById('fSeason').value = item.progress ? item.progress.s : '';
                 document.getElementById('fEpisode').value = item.progress ? item.progress.e : '';
                 const own = item.sites.find(s => s.name === 'Своє');
@@ -967,12 +1019,14 @@
                 fRating.value = '';
                 fYear.value = '';
                 fDesc.value = '';
+                document.getElementById('fPoster').value = '';
                 document.getElementById('fSeason').value = '';
                 document.getElementById('fEpisode').value = '';
                 fLink.value = '';
             }
             renderSiteChips();
             paintChips();
+            updateFormPoster();
             addModal.classList.remove('hidden');
             addModal.classList.add('flex');
             setTimeout(() => fTitle.focus(), 50);
@@ -1011,6 +1065,9 @@
 
             const description = fDesc.value.trim();
 
+            const poster = normalizeUrl(document.getElementById('fPoster').value);
+            if (poster === null) { showError('Некоректне посилання на постер.'); document.getElementById('fPoster').focus(); return; }
+
             let progress;
             if (selectedCat === 'Серіал') {
                 const sRaw = document.getElementById('fSeason').value.trim();
@@ -1031,6 +1088,7 @@
                     item.year = year;
                     item.description = description;
                     item.sites = sites;
+                    item.poster = poster;
                     item.progress = progress;
                 }
             } else {
@@ -1045,7 +1103,8 @@
                     description,
                     sites,
                     custom: true,
-                    progress
+                    progress,
+                    poster
                 });
             }
 
@@ -1328,7 +1387,129 @@
             wrap.classList.remove('hidden');
         }
 
+        // ===== Постери =====
+        let posterItemId = null;
+        let posterTimer = null;
+        let formPosterTimer = null;
+
+        function googleImagesUrl(title) {
+            return 'https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(searchTitleOf(title) + ' постер');
+        }
+
+        function updatePosterBig() {
+            const big = document.getElementById('posterBig');
+            const empty = document.getElementById('posterEmpty');
+            const url = normalizeUrl(document.getElementById('posterUrl').value);
+            if (url) {
+                big.onerror = () => {
+                    big.classList.add('hidden');
+                    empty.textContent = 'Не вдалося завантажити картинку. Спробуйте інше посилання.';
+                    empty.classList.remove('hidden');
+                };
+                big.onload = () => {
+                    big.classList.remove('hidden');
+                    empty.classList.add('hidden');
+                };
+                if (big.getAttribute('src') !== url) big.src = url;
+            } else {
+                big.removeAttribute('src');
+                big.classList.add('hidden');
+                empty.textContent = 'Постера ще немає';
+                empty.classList.remove('hidden');
+            }
+        }
+
+        function openPoster(item) {
+            posterItemId = item.id;
+            document.getElementById('posterTitle').textContent = item.title;
+            document.getElementById('posterUrl').value = item.poster || '';
+            document.getElementById('posterError').classList.add('hidden');
+            document.getElementById('removePosterBtn').classList.toggle('hidden', !item.poster);
+            document.getElementById('posterBig').removeAttribute('src');
+            updatePosterBig();
+            showModal(document.getElementById('posterModal'));
+        }
+
+        function closePoster() {
+            hideModal(document.getElementById('posterModal'));
+            posterItemId = null;
+        }
+
+        function applyPoster(value) {
+            const item = contentData.find(i => i.id === posterItemId);
+            if (!item) { closePoster(); return; }
+            item.poster = value;
+            saveCatalog();
+            closePoster();
+            renderList();
+        }
+
+        function savePoster() {
+            const err = document.getElementById('posterError');
+            const v = normalizeUrl(document.getElementById('posterUrl').value);
+            if (v === null) {
+                err.textContent = 'Некоректне посилання. Потрібна адреса картинки, наприклад https://site.com/poster.jpg';
+                err.classList.remove('hidden');
+                return;
+            }
+            applyPoster(v);
+        }
+
+        function updateFormPoster() {
+            const img = document.getElementById('fPosterPreview');
+            const url = normalizeUrl(document.getElementById('fPoster').value);
+            if (url) {
+                img.onerror = () => img.classList.add('hidden');
+                img.onload = () => img.classList.remove('hidden');
+                if (img.getAttribute('src') !== url) img.src = url;
+            } else {
+                img.removeAttribute('src');
+                img.classList.add('hidden');
+            }
+        }
+
+        function bindPosters() {
+            const posterModal = document.getElementById('posterModal');
+            document.getElementById('closePoster').addEventListener('click', closePoster);
+            posterModal.addEventListener('click', (e) => { if (e.target === posterModal) closePoster(); });
+            document.getElementById('savePosterBtn').addEventListener('click', savePoster);
+            document.getElementById('removePosterBtn').addEventListener('click', () => applyPoster(''));
+            document.getElementById('posterFindBtn').addEventListener('click', () => {
+                const item = contentData.find(i => i.id === posterItemId);
+                if (item) window.open(googleImagesUrl(item.title), '_blank', 'noopener');
+            });
+            document.getElementById('posterUrl').addEventListener('input', () => {
+                clearTimeout(posterTimer);
+                posterTimer = setTimeout(updatePosterBig, 500);
+            });
+
+            document.getElementById('fPoster').addEventListener('input', () => {
+                clearTimeout(formPosterTimer);
+                formPosterTimer = setTimeout(updateFormPoster, 500);
+            });
+            document.getElementById('findPosterBtn').addEventListener('click', () => {
+                const title = fTitle.value.trim();
+                if (!title) { showError('Спершу введіть назву.'); fTitle.focus(); return; }
+                window.open(googleImagesUrl(title), '_blank', 'noopener');
+            });
+
+            // Якщо картинка не завантажилась — показуємо заглушку
+            document.getElementById('moviesList').addEventListener('error', (e) => {
+                const img = e.target;
+                if (!img || img.tagName !== 'IMG' || !img.hasAttribute('data-poster')) return;
+                const ph = document.createElement('span');
+                ph.className = 'text-2xl opacity-50';
+                ph.textContent = '🎬';
+                img.replaceWith(ph);
+            }, true);
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !posterModal.classList.contains('hidden')) closePoster();
+            });
+        }
+
         function bindExtras() {
+            bindPosters();
             const settingsModal = document.getElementById('settingsModal');
             const searchModal = document.getElementById('searchModal');
 
@@ -1443,7 +1624,9 @@
                 const id = Number(btn.dataset.id);
                 const item = contentData.find(i => i.id === id);
                 if (!item) return;
-                if (btn.dataset.action === 'search') {
+                if (btn.dataset.action === 'poster') {
+                    openPoster(item);
+                } else if (btn.dataset.action === 'search') {
                     openSearch(item);
                 } else if (btn.dataset.action === 'ep-plus') {
                     const cur = item.progress || { s: 1, e: 0 };

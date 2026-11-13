@@ -1,4 +1,6 @@
-const CACHE = 'kinohub-v8';
+const CACHE = 'kinohub-v9';
+const IMG_CACHE = 'kinohub-img-v1';
+const IMG_MAX = 80;
 const LOCAL = [
   './',
   './index.html',
@@ -28,7 +30,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)));
+    await Promise.all(keys.filter(k => k !== CACHE && k !== IMG_CACHE).map(k => caches.delete(k)));
     await self.clients.claim();
   })());
 });
@@ -36,6 +38,27 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('message', (event) => {
   if (event.data === 'SKIP_WAITING') self.skipWaiting();
 });
+
+async function trimImages(cache) {
+  const keys = await cache.keys();
+  if (keys.length > IMG_MAX) {
+    await Promise.all(keys.slice(0, keys.length - IMG_MAX).map(k => cache.delete(k)));
+  }
+}
+
+// Постери з інших сайтів: окремий кеш з обмеженням кількості
+async function imageStrategy(req) {
+  const cache = await caches.open(IMG_CACHE);
+  const cached = await cache.match(req);
+  const update = fetch(req).then(async (res) => {
+    if (res && (res.status === 200 || res.type === 'opaque')) {
+      await cache.put(req, res.clone());
+      trimImages(cache);
+    }
+    return res;
+  }).catch(() => null);
+  return cached || (await update) || Response.error();
+}
 
 self.addEventListener('fetch', (event) => {
   const req = event.request;
@@ -55,6 +78,12 @@ self.addEventListener('fetch', (event) => {
         return (await caches.match('./index.html')) || (await caches.match('./'));
       }
     })());
+    return;
+  }
+
+  // Зовнішні картинки (постери)
+  if (req.destination === 'image' && url.origin !== self.location.origin) {
+    event.respondWith(imageStrategy(req));
     return;
   }
 
